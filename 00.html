@@ -1,0 +1,2306 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>百家好事业部管理平台</title>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://unpkg.com">
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" onerror="(function(){var s=document.createElement('script');s.defer=true;s.src='https://unpkg.com/chart.js@4.4.1/dist/chart.umd.min.js';document.head.appendChild(s);})()"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" referrerpolicy="no-referrer" onerror="(function(){var s=document.createElement('script');s.defer=true;s.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';document.head.appendChild(s);})()"></script>
+    <link rel="stylesheet" href="./assets/css/styles.css">
+    <style>
+        :root {
+            --primary-color: #c3b092;
+            --primary-dark: #b5a17e;
+            --primary-light: #e6dfd3;
+            --secondary-color: #2ecc71;
+            --accent-color: #e74c3c;
+            --light-bg: #f9f7f4;
+            --card-shadow: 0 4px 6px rgba(195, 176, 146, 0.1);
+            --text-primary: #5a4a3e;
+            --text-secondary: #8a7a6a;
+            --border-color: #e2d9cf;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(to bottom, var(--light-bg), #f0ede8);
+            color: var(--text-primary);
+            padding-bottom: 50px;
+        }
+        
+        .navbar {
+            /* 深色到浅色的自然纵向渐变（无白感，保证可读性） */
+            background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary-color) 100%);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        .navbar .navbar-brand {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: .4px;
+            font-family: "Segoe UI", system-ui, -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+            text-shadow: 0 1px 0 rgba(0,0,0,0.15);
+        }
+        /* 顶栏右侧操作：主题/导出/管理员 区分且随皮肤 */
+        .navbar .nav-link.theme-switch,
+        .navbar .nav-link.admin-toggle {
+            padding: 6px 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255,255,255,.35);
+            color: #fff;
+            margin-right: 8px;
+            line-height: 1.2;
+        }
+        .navbar .nav-link.theme-switch:hover,
+        .navbar .nav-link.admin-toggle:hover {
+            background: rgba(255,255,255,.15);
+        }
+        .navbar .btn-export {
+            padding: 6px 14px;
+            border-radius: 999px;
+            margin-right: 12px;
+            font-weight: 600;
+            color: #fff;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,.35);
+        }
+        .navbar .btn-export:hover { background: rgba(255,255,255,.12); }
+        
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-bottom: 20px;
+        }
+        
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.14);
+        }
+        
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+            color: white;
+            border-bottom: none;
+            font-weight: 600;
+            padding: 15px 20px;
+            border-radius: 10px 10px 0 0 !important;
+        }
+        
+        .date-selector {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+        }
+        .date-selector.date-compact{ padding:10px; }
+        .date-selector.date-compact .date-icon{ padding:6px 10px; border-radius:6px; }
+        .date-selector.date-compact .date-icon .label{ font-size:12px; }
+        
+        .metric-card {
+            text-align: center;
+            padding: 15px;
+        }
+        
+        .metric-value {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        
+        .metric-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        .positive { color: var(--emphasis-positive, var(--primary-dark)); font-weight: 600; }
+        .negative { color: #e74c3c; font-weight: 600; }
+        /* 表格同比/环比：仅高亮文字（去掉底色） */
+        .table td.positive, .table td.negative {
+            background: transparent !important;
+            color: inherit;
+            font-weight: 700;
+        }
+        .table td.positive { color: var(--primary-dark) !important; text-shadow: 0 0 0 transparent; }
+        .table td.negative { color: #d63031 !important; }
+        
+        .controller-card, .shop-card, .product-card {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .controller-card:hover, .shop-card:hover, .product-card:hover {
+            background-color: var(--primary-light);
+        }
+        /* 实控人TOP5：整行渐变覆盖到卡片左右与上下边缘 */
+        .top5-list { margin: -16px -16px; }
+        .top5-list .controller-card {
+            border: none;
+            border-radius: 0;
+            padding: 12px 16px;
+            background-clip: border-box;
+            transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
+        }
+        /* 去掉TOP5行的中心渐变，改为前三名在名称前加金银铜emoji */
+        .top5-list .controller-card { background: transparent; }
+        .top5-list .controller-card h5 { position: relative; padding-left: 2px; }
+        .top5-list .controller-card:nth-child(1) h5::before { content: "🥇 "; }
+        .top5-list .controller-card:nth-child(2) h5::before { content: "🥈 "; }
+        .top5-list .controller-card:nth-child(3) h5::before { content: "🥉 "; }
+        /* 悬停保持轻微上浮与阴影，颜色不再覆盖文本 */
+        .top5-list .controller-card:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(0,0,0,0.14); filter: saturate(1.04) brightness(0.99); background-color: transparent !important; }
+        
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+        
+        .tag-high-value {
+            background-color: #fff2cc;
+            color: #b38f00;
+        }
+        
+        .tag-vip {
+            background-color: #e1d5e7;
+            color: #674ea7;
+        }
+        
+        .tag-new {
+            background-color: #d5e8d4;
+            color: #3c763d;
+        }
+        
+        .tag-warning {
+            background-color: #fce1e5;
+            color: #a94442;
+        }
+        
+        .tab-button {
+            padding: 10px 20px;
+            border: none;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-right: 5px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .tab-button.active {
+            background-color: var(--primary-dark);
+            color: #fff;
+            border-color: var(--primary-dark);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.12);
+        }
+        .tab-button.active:hover { filter: brightness(0.95); }
+        
+        .table th {
+            background: linear-gradient(135deg, rgba(0,0,0,0.0), rgba(0,0,0,0.0));
+            color: var(--text-primary);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-color);
+        }
+        /* 表格首列（实体名称列）与数据列做区分 */
+        .table thead th:first-child { font-weight: 800; color: var(--text-primary); border-right: 1px solid var(--border-color); }
+        .table tbody td:first-child { font-weight: 700; color: var(--text-primary); border-right: 1px solid var(--border-color); white-space: nowrap; }
+        /* 实控人列表：标签列两侧添加分隔，避免双线冲突 */
+        .table-controllers thead th:first-child, .table-controllers tbody td:first-child { border-right: none; }
+        .table-controllers thead th:nth-child(2), .table-controllers tbody td:nth-child(2) { border-left: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
+        
+        .progress {
+            height: 8px;
+            margin-top: 5px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+        
+        .negative-info {
+            border-left: 4px solid var(--accent-color);
+            padding-left: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .page-title {
+            color: var(--primary-dark);
+            font-weight: 700;
+            margin-bottom: 20px;
+        }
+        
+        .controller-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--primary-dark);
+        }
+        
+        .filter-section {
+            background-color: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+        }
+        
+        .info-section {
+            display: none;
+        }
+        
+        .info-section.active {
+            display: block;
+        }
+        
+        .contract-tab {
+            cursor: pointer;
+        }
+        
+        .back-button {
+            margin-bottom: 20px;
+        }
+        
+        .breadcrumb {
+            background-color: white;
+            border-radius: 10px;
+            padding: 12px 16px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .breadcrumb .back-link {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px; height: 36px;
+            border-radius: 8px;
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border: 1px solid var(--border-color);
+            text-decoration: none;
+            transition: all .2s ease;
+        }
+        .breadcrumb .back-link svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 3; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+        .breadcrumb .back-link:hover {
+            background: var(--primary-color);
+            color: #fff;
+            border-color: var(--primary-dark);
+        }
+        .breadcrumb .breadcrumb-item a {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumb .breadcrumb-item.active {
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+        /* 确保下拉层级高于日历等弹层 */
+        .dropdown-menu { z-index: 11001; }
+        
+        /* 新增样式 */
+        .data-mode-selector {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.10);
+            border-left: 4px solid var(--primary-color);
+        }
+        .data-mode-selector .btn-group { gap: 8px; }
+        .data-mode-selector .btn-group .btn {
+            border-radius: 999px !important;
+            padding: 6px 12px;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            background: #fff;
+            transition: all .2s ease;
+        }
+        .data-mode-selector .btn-group .btn:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-color: var(--primary-color);
+        }
+        .data-mode-selector .btn-group .btn.active {
+            color: #fff;
+            background: var(--primary-color);
+            border-color: var(--primary-color);
+            box-shadow: none;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border-color);
+            border-radius: 10px;
+            padding: 40px 20px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin-bottom: 20px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+        
+        .calendar-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 6px 18px rgba(195, 176, 146, 0.2);
+            border: 2px solid var(--primary-color);
+            z-index: 10000;
+            padding: 24px;
+            min-width: 360px;
+            max-width: 90vw;
+            display: none;
+        }
+        
+        .calendar-popup.show {
+            display: block;
+        }
+        
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary-light);
+        }
+        
+        .calendar-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--primary-dark);
+        }
+        
+        .calendar-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+        
+        .calendar-close:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-primary);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .calendar-year-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .calendar-quarter-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .calendar-month-grid {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        
+        .calendar-day-grid {
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
+        }
+        
+        .calendar-item {
+            padding: 12px 16px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 14px;
+            background: white;
+            border: 2px solid transparent;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+        
+        .calendar-item:hover {
+            background: var(--primary-light);
+            color: var(--primary-dark);
+            border-color: var(--primary-color);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(195, 176, 146, 0.1);
+        }
+        
+        .calendar-item.selected {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-dark);
+            box-shadow: 0 4px 12px rgba(195, 176, 146, 0.15);
+        }
+        
+        .date-icon {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 12px;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+        
+        .date-icon:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(195, 176, 146, 0.15);
+            border-color: var(--primary-color);
+        }
+        
+        .date-icon.active {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+        
+        .date-icon .icon {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .date-icon .label {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- 导航栏 -->
+    <nav class="navbar navbar-expand-lg navbar-dark">
+        <div class="container">
+            <a class="navbar-brand" href="#" onclick="showPage('home')">百家好事业部管理平台</a>
+            <div class="navbar-nav ms-auto">
+                <div class="nav-item dropdown me-3">
+                    <a class="nav-link dropdown-toggle theme-switch" href="#" id="themeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        皮肤
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="themeDropdown">
+                        <li><a class="dropdown-item" href="#" onclick="applyTheme('gold')">黄棕</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="applyTheme('warm')">洋红</a></li>
+                        <li><a class="dropdown-item" href="#" onclick="applyTheme('indigo')">靛蓝</a></li>
+                    </ul>
+                </div>
+                <button class="btn btn-sm btn-export" onclick="exportAllToExcel()">导出Excel</button>
+                <div class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle admin-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        管理员
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                        <li><a class="dropdown-item" href="#">个人设置</a></li>
+                        <li><a class="dropdown-item" href="#">退出登录</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <!-- 主页面 -->
+        <div id="home-page">
+            <!-- 数据模式选择器 -->
+            <div class="data-mode-selector">
+                <div class="row align-items-center">
+                    <div class="col-md-6">
+                        <h5 class="mb-0">数据模式</h5>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <div class="btn-group" role="group">
+                            <button type="button" class="btn btn-outline-primary active" id="mockDataBtn" onclick="switchDataMode('mock')">模拟数据</button>
+                            <button type="button" class="btn btn-outline-primary" id="realDataBtn" onclick="switchDataMode('real')">真实数据</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Excel上传区域 -->
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
+                <h5>点击或拖拽上传Excel文件</h5>
+                <p class="text-muted">支持 .xlsx, .xls 格式</p>
+                <input type="file" id="fileInput" accept=".xlsx,.xls" style="display: none;">
+            </div>
+
+            <!-- 日期选择器 -->
+            <div class="date-selector mb-4 date-compact">
+                <div class="row align-items-center g-2">
+                    <div class="col-md-3 col-12">
+                        <h5 class="mb-0">日期选择</h5>
+                    </div>
+                    <div class="col-md-9 col-12 d-flex align-items-center justify-content-between flex-wrap" style="gap:8px">
+                        <div class="d-flex align-items-center flex-wrap" style="gap:8px">
+                            <div class="date-icon" id="yearIcon" onclick="showYearCalendar()" title="选择年">
+                                <div class="label">年</div>
+                            </div>
+                            <div class="date-icon" id="quarterIcon" onclick="showQuarterCalendar()" title="选择季">
+                                <div class="label">季</div>
+                            </div>
+                            <div class="date-icon" id="monthIcon" onclick="showMonthCalendar()" title="选择月">
+                                <div class="label">月</div>
+                            </div>
+                            <div class="date-icon" id="dayIcon" onclick="showDayCalendar()" title="选择日">
+                                <div class="label">日</div>
+                            </div>
+                            <input type="date" id="fullDateInput" class="form-control form-control-sm" style="width: 160px;" title="选择完整日期">
+                        </div>
+                        <div class="text-end">
+                            <span id="currentSelection" class="text-secondary small">当前选择：-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 关键指标卡片 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当日GMV</div>
+                        <div class="metric-value">¥1,245,680</div>
+                        <div class="positive">↑ 12.5% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当月GMV</div>
+                        <div class="metric-value">¥28,567,320</div>
+                        <div class="positive">↑ 8.3% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当年GMV</div>
+                        <div class="metric-value">¥312,458,790</div>
+                        <div class="positive">↑ 15.7% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">目标达成率</div>
+                        <div class="metric-value">86.5%</div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 86.5%" aria-valuenow="86.5" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- 实控人TOP5 -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>实控人TOP5</span>
+                            <a href="#" class="btn btn-sm" style="color:#fff;border-color:rgba(255,255,255,.6);background:transparent;border:1px solid rgba(255,255,255,.35)" onmouseover="this.style.background='rgba(255,255,255,.15)'" onmouseout="this.style.background='transparent'">查看全部</a>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group top5-list">
+                                <a href="#" class="list-group-item list-group-item-action controller-card" onclick="showControllerDetail('张明轩')">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">张明轩 <span class="tag tag-high-value">高价值客户</span></h5>
+                                        <small>¥568,920</small>
+                                    </div>
+                                    <p class="mb-1">当日GMV</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action controller-card" onclick="showControllerDetail('李思雨')">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">李思雨 <span class="tag tag-vip">VIP客户</span></h5>
+                                        <small>¥452,310</small>
+                                    </div>
+                                    <p class="mb-1">当日GMV</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action controller-card" onclick="showControllerDetail('王建国')">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">王建国 <span class="tag tag-high-value">高价值客户</span></h5>
+                                        <small>¥398,760</small>
+                                    </div>
+                                    <p class="mb-1">当日GMV</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action controller-card" onclick="showControllerDetail('赵晓雯')">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">赵晓雯 <span class="tag tag-new">新客户</span></h5>
+                                        <small>¥356,890</small>
+                                    </div>
+                                    <p class="mb-1">当日GMV</p>
+                                </a>
+                                <a href="#" class="list-group-item list-group-item-action controller-card" onclick="showControllerDetail('刘浩然')">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h5 class="mb-1">刘浩然 <span class="tag tag-vip">VIP客户</span></h5>
+                                        <small>¥321,450</small>
+                                    </div>
+                                    <p class="mb-1">当日GMV</p>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 渠道GMV分布 -->
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header">渠道GMV分布</div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="channelChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 实控人列表 -->
+            <div class="card mt-4">
+                <div class="card-header">实控人列表</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover table-controllers">
+                            <thead>
+                                <tr>
+                                    <th>实控人</th>
+                                    <th>标签</th>
+                                    <th>当日GMV</th>
+                                    <th>当月GMV</th>
+                                    <th>当年GMV</th>
+                                    <th>同比</th>
+                                    <th>环比</th>
+                                    <th>目标达成率</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="controller-card" onclick="showControllerDetail('张明轩')">
+                                    <td>张明轩</td>
+                                    <td><span class="tag tag-high-value">高价值客户</span></td>
+                                    <td>¥568,920</td>
+                                    <td>¥12,458,760</td>
+                                    <td>¥145,678,920</td>
+                                    <td class="positive">+15.2%</td>
+                                    <td class="positive">+8.7%</td>
+                                    <td>
+                                        <div>92.5%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 92.5%" aria-valuenow="92.5" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('李思雨')">
+                                    <td>李思雨</td>
+                                    <td><span class="tag tag-vip">VIP客户</span></td>
+                                    <td>¥452,310</td>
+                                    <td>¥10,245,890</td>
+                                    <td>¥124,567,890</td>
+                                    <td class="positive">+12.8%</td>
+                                    <td class="positive">+6.3%</td>
+                                    <td>
+                                        <div>88.7%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 88.7%" aria-valuenow="88.7" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('王建国')">
+                                    <td>王建国</td>
+                                    <td><span class="tag tag-high-value">高价值客户</span></td>
+                                    <td>¥398,760</td>
+                                    <td>¥9,876,540</td>
+                                    <td>¥112,345,670</td>
+                                    <td class="positive">+10.5%</td>
+                                    <td class="positive">+5.2%</td>
+                                    <td>
+                                        <div>85.3%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 85.3%" aria-valuenow="85.3" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('赵晓雯')">
+                                    <td>赵晓雯</td>
+                                    <td><span class="tag tag-new">新客户</span></td>
+                                    <td>¥356,890</td>
+                                    <td>¥8,765,430</td>
+                                    <td>¥98,765,430</td>
+                                    <td class="positive">+8.7%</td>
+                                    <td class="positive">+4.1%</td>
+                                    <td>
+                                        <div>82.1%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 82.1%" aria-valuenow="82.1" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('刘浩然')">
+                                    <td>刘浩然</td>
+                                    <td><span class="tag tag-vip">VIP客户</span></td>
+                                    <td>¥321,450</td>
+                                    <td>¥7,654,320</td>
+                                    <td>¥87,654,320</td>
+                                    <td class="positive">+7.3%</td>
+                                    <td class="positive">+3.5%</td>
+                                    <td>
+                                        <div>79.8%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 79.8%" aria-valuenow="79.8" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('陈小春')">
+                                    <td>陈小春</td>
+                                    <td><span class="tag tag-high-value">高价值客户</span></td>
+                                    <td>¥298,760</td>
+                                    <td>¥6,543,210</td>
+                                    <td>¥76,543,210</td>
+                                    <td class="positive">+6.2%</td>
+                                    <td class="positive">+2.8%</td>
+                                    <td>
+                                        <div>77.5%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 77.5%" aria-valuenow="77.5" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('林晓晓')">
+                                    <td>林晓晓</td>
+                                    <td><span class="tag tag-new">新客户</span></td>
+                                    <td>¥276,540</td>
+                                    <td>¥5,432,100</td>
+                                    <td>¥65,432,100</td>
+                                    <td class="positive">+5.1%</td>
+                                    <td class="positive">+2.1%</td>
+                                    <td>
+                                        <div>75.2%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 75.2%" aria-valuenow="75.2" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('黄大伟')">
+                                    <td>黄大伟</td>
+                                    <td><span class="tag tag-vip">VIP客户</span></td>
+                                    <td>¥254,320</td>
+                                    <td>¥4,321,090</td>
+                                    <td>¥54,321,090</td>
+                                    <td class="positive">+4.3%</td>
+                                    <td class="positive">+1.7%</td>
+                                    <td>
+                                        <div>72.8%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 72.8%" aria-valuenow="72.8" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('周小雅')">
+                                    <td>周小雅</td>
+                                    <td><span class="tag tag-new">新客户</span></td>
+                                    <td>¥232,100</td>
+                                    <td>¥3,210,980</td>
+                                    <td>¥43,210,980</td>
+                                    <td class="positive">+3.5%</td>
+                                    <td class="positive">+1.2%</td>
+                                    <td>
+                                        <div>70.1%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 70.1%" aria-valuenow="70.1" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr class="controller-card" onclick="showControllerDetail('吴天宇')">
+                                    <td>吴天宇</td>
+                                    <td><span class="tag tag-high-value">高价值客户</span></td>
+                                    <td>¥209,870</td>
+                                    <td>¥2,109,870</td>
+                                    <td>¥32,109,870</td>
+                                    <td class="positive">+2.8%</td>
+                                    <td class="positive">+0.9%</td>
+                                    <td>
+                                        <div>67.5%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-danger" role="progressbar" style="width: 67.5%" aria-valuenow="67.5" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 渠道和类目GMV信息 -->
+            <div class="card mt-4">
+                <div class="card-header">渠道和类目GMV信息</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>渠道/类目</th>
+                                    <th>当日GMV</th>
+                                    <th>当月GMV</th>
+                                    <th>当年GMV</th>
+                                    <th>同比</th>
+                                    <th>环比</th>
+                                    <th>目标达成率</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>天猫</td>
+                                    <td>¥645,780</td>
+                                    <td>¥14,567,890</td>
+                                    <td>¥167,890,450</td>
+                                    <td class="positive">+14.2%</td>
+                                    <td class="positive">+7.8%</td>
+                                    <td>
+                                        <div>89.5%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 89.5%" aria-valuenow="89.5" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>京东</td>
+                                    <td>¥345,670</td>
+                                    <td>¥8,765,430</td>
+                                    <td>¥98,765,430</td>
+                                    <td class="positive">+9.8%</td>
+                                    <td class="positive">+4.5%</td>
+                                    <td>
+                                        <div>82.3%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 82.3%" aria-valuenow="82.3" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>拼多多</td>
+                                    <td>¥198,760</td>
+                                    <td>¥4,567,890</td>
+                                    <td>¥54,678,900</td>
+                                    <td class="positive">+7.5%</td>
+                                    <td class="positive">+3.2%</td>
+                                    <td>
+                                        <div>78.9%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-warning" role="progressbar" style="width: 78.9%" aria-valuenow="78.9" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>抖音</td>
+                                    <td>¥287,650</td>
+                                    <td>¥6,543,210</td>
+                                    <td>¥76,543,210</td>
+                                    <td class="positive">+22.3%</td>
+                                    <td class="positive">+12.7%</td>
+                                    <td>
+                                        <div>95.2%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 95.2%" aria-valuenow="95.2" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>快手</td>
+                                    <td>¥176,540</td>
+                                    <td>¥3,456,780</td>
+                                    <td>¥43,456,780</td>
+                                    <td class="positive">+18.7%</td>
+                                    <td class="positive">+9.8%</td>
+                                    <td>
+                                        <div>91.8%</div>
+                                        <div class="progress">
+                                            <div class="progress-bar bg-success" role="progressbar" style="width: 91.8%" aria-valuenow="91.8" aria-valuemin="0" aria-valuemax="100"></div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 实控人详情页面 -->
+        <div id="controller-page" style="display: none;">
+            <!-- 面包屑导航 -->
+            <nav aria-label="breadcrumb" class="breadcrumb">
+                <a href="#" class="back-link" onclick="showPage('home')" title="返回上一级">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 L9 12 L15 18"/></svg>
+                </a>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" onclick="showPage('home')">首页</a></li>
+                    <li class="breadcrumb-item active" id="controller-breadcrumb">实控人详情</li>
+                </ol>
+            </nav>
+
+            <!-- 实控人标题和标签 -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="controller-name" id="controller-name">张明轩 <span class="tag tag-high-value">高价值客户</span></h1>
+                    <p class="text-muted">注册时间: 2019-03-15 | 最后活跃: 2023-10-26</p>
+                </div>
+                <div class="date-selector">
+                    <input type="date" class="form-control" value="2023-10-26">
+                </div>
+            </div>
+
+            <!-- 关键指标 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当日GMV</div>
+                        <div class="metric-value">¥568,920</div>
+                        <div class="positive">↑ 15.2% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当月GMV</div>
+                        <div class="metric-value">¥12,458,760</div>
+                        <div class="positive">↑ 12.8% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当年GMV</div>
+                        <div class="metric-value">¥145,678,920</div>
+                        <div class="positive">↑ 18.5% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">目标达成率</div>
+                        <div class="metric-value">92.5%</div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 92.5%" aria-valuenow="92.5" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 信息标签页 -->
+            <div class="card">
+                <div class="card-header">
+                    <button class="tab-button active" onclick="showInfo('basic')">客户基本信息</button>
+                    <button class="tab-button" onclick="showInfo('team')">团队信息</button>
+                    <button class="tab-button" onclick="showInfo('contract')">签署合同</button>
+                </div>
+                <div class="card-body">
+                    <!-- 客户基本信息 -->
+                    <div id="basic-info" class="info-section active">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>姓名:</strong> <span id="basic-name">张明轩</span></p>
+                                <p><strong>性别:</strong> 男</p>
+                                <p><strong>年龄:</strong> 42</p>
+                                <p><strong>联系电话:</strong> 138****5678</p>
+                                <p><strong>邮箱:</strong> zhangmx@example.com</p>
+                                <p><strong>身份证号:</strong> 3301**********1234</p>
+                                <p><strong>婚姻状况:</strong> 已婚</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>客户等级:</strong> 钻石会员</p>
+                                <p><strong>客户类型:</strong> 企业客户</p>
+                                <p><strong>所在地区:</strong> 浙江省杭州市</p>
+                                <p><strong>详细地址:</strong> 杭州市西湖区文三路XXX号</p>
+                                <p><strong>注册时间:</strong> 2019-03-15</p>
+                                <p><strong>最后下单时间:</strong> 2023-10-26 14:32</p>
+                                <p><strong>客户评分:</strong> 4.8/5.0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 团队信息 -->
+                    <div id="team-info" class="info-section">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>团队规模:</strong> 45人</p>
+                                <p><strong>运营负责人:</strong> 李思雨</p>
+                                <p><strong>客服团队:</strong> 12人</p>
+                                <p><strong>运营团队:</strong> 18人</p>
+                                <p><strong>仓储团队:</strong> 15人</p>
+                                <p><strong>设计团队:</strong> 5人</p>
+                                <p><strong>摄影团队:</strong> 3人</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>团队成立时间:</strong> 2019-05-20</p>
+                                <p><strong>办公地址:</strong> 杭州市西湖区文三路XXX号</p>
+                                <p><strong>团队评分:</strong> 4.8/5.0</p>
+                                <p><strong>月度培训:</strong> 2次/月</p>
+                                <p><strong>团队稳定性:</strong> 高</p>
+                                <p><strong>核心成员:</strong> 李思雨、王建国、赵晓雯</p>
+                                <p><strong>团队特色:</strong> 擅长多渠道运营，数据分析能力强</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 签署合同 -->
+                    <div id="contract-info" class="info-section">
+                        <div class="row mb-4">
+                            <div class="col-md-4">
+                                <div class="card contract-tab text-center" onclick="showContract('dealer')">
+                                    <div class="card-body">
+                                        <h5 class="card-title">经销商合同</h5>
+                                        <p class="card-text">3份有效合同</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card contract-tab text-center" onclick="showContract('supplier')">
+                                    <div class="card-body">
+                                        <h5 class="card-title">供应商合同</h5>
+                                        <p class="card-text">2份有效合同</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card contract-tab text-center" onclick="showContract('other')">
+                                    <div class="card-body">
+                                        <h5 class="card-title">其他合同</h5>
+                                        <p class="card-text">5份有效合同</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 合同详情区域 -->
+                        <div id="contract-details">
+                            <div class="card">
+                                <div class="card-header" id="contract-title">经销商合同详情</div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>店铺名称</th>
+                                                    <th>ID</th>
+                                                    <th>渠道</th>
+                                                    <th>开店时间</th>
+                                                    <th>当日GMV</th>
+                                                    <th>同比</th>
+                                                    <th>环比</th>
+                                                    <th>目标达成率</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="contract-table-body">
+                                                <!-- 经销商合同数据将通过JavaScript动态加载 -->
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GMV信息 -->
+            <div class="card mt-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>GMV信息</span>
+                    <div>
+                        <select class="form-select d-inline-block w-auto" id="channel-filter">
+                            <option selected>全部渠道</option>
+                            <option>天猫</option>
+                            <option>京东</option>
+                            <option>拼多多</option>
+                            <option>抖音</option>
+                            <option>快手</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>店铺名称</th>
+                                    <th>ID</th>
+                                    <th>渠道</th>
+                                    <th>开店时间</th>
+                                    <th>当日GMV</th>
+                                    <th>当月GMV</th>
+                                    <th>当年GMV</th>
+                                    <th>同比</th>
+                                    <th>环比</th>
+                                    <th>目标达成率</th>
+                                </tr>
+                            </thead>
+                            <tbody id="gmv-table-body">
+                                <!-- GMV数据将通过JavaScript动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 负面信息 -->
+            <div class="card mt-4">
+                <div class="card-header">负面信息</div>
+                <div class="card-body">
+                    <div class="negative-info">
+                        <h5>商品质量问题投诉</h5>
+                        <p><strong>时间:</strong> 2023-10-15</p>
+                        <p><strong>店铺:</strong> 张明轩旗舰店</p>
+                        <p><strong>商品:</strong> 男士休闲夹克 (ID: MXJ001)</p>
+                        <p><strong>问题描述:</strong> 客户反馈夹克面料与描述不符，存在色差问题</p>
+                    </div>
+                    <div class="negative-info">
+                        <h5>物流延迟投诉</h5>
+                        <p><strong>时间:</strong> 2023-10-08</p>
+                        <p><strong>店铺:</strong> 张明轩京东店</p>
+                        <p><strong>商品:</strong> 男士商务衬衫 (ID: MSC002)</p>
+                        <p><strong>问题描述:</strong> 订单延迟发货，超出承诺发货时间3天</p>
+                    </div>
+                    <div class="negative-info">
+                        <h5>客服态度问题</h5>
+                        <p><strong>时间:</strong> 2023-09-25</p>
+                        <p><strong>店铺:</strong> 张明轩拼多多店</p>
+                        <p><strong>商品:</strong> 男士休闲裤 (ID: MXK003)</p>
+                        <p><strong>问题描述:</strong> 客户反馈客服回复不及时，态度冷淡</p>
+                    </div>
+                    <div class="negative-info">
+                        <h5>商品描述不符</h5>
+                        <p><strong>时间:</strong> 2023-09-12</p>
+                        <p><strong>店铺:</strong> 张明轩抖音店</p>
+                        <p><strong>商品:</strong> 男士运动鞋 (ID: MXS004)</p>
+                        <p><strong>问题描述:</strong> 客户反馈商品实际材质与页面描述不符</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 行业大盘对比 -->
+            <div class="card mt-4">
+                <div class="card-header">行业大盘对比</div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="industryChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 店铺详情页面 -->
+        <div id="shop-page" style="display: none;">
+            <!-- 面包屑导航 -->
+            <nav aria-label="breadcrumb" class="breadcrumb">
+                <a href="#" class="back-link" id="back-to-controller-icon" onclick="showPage('home')" title="返回上一级">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6 L9 12 L15 18"/></svg>
+                </a>
+                <ol class="breadcrumb mb-0">
+                    <li class="breadcrumb-item"><a href="#" onclick="showPage('home')">首页</a></li>
+                    <li class="breadcrumb-item"><a href="#" id="back-to-controller">实控人详情</a></li>
+                    <li class="breadcrumb-item active" id="shop-breadcrumb">店铺详情</li>
+                </ol>
+            </nav>
+
+            <!-- 店铺标题 -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h1 class="controller-name" id="shop-name">张明轩旗舰店</h1>
+                    <p class="text-muted">店铺ID: <span id="shop-id">ZMX001</span> | 开店时间: <span id="shop-open-time">2019-06-10</span> | 渠道: <span id="shop-channel">天猫</span></p>
+                </div>
+                <div class="date-selector">
+                    <input type="date" class="form-control" value="2023-10-26">
+                </div>
+            </div>
+
+            <!-- 关键指标 -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当日GMV</div>
+                        <div class="metric-value">¥245,680</div>
+                        <div class="positive">↑ 18.2% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当月GMV</div>
+                        <div class="metric-value">¥5,678,920</div>
+                        <div class="positive">↑ 15.7% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">当年GMV</div>
+                        <div class="metric-value">¥67,890,450</div>
+                        <div class="positive">↑ 22.3% 同比</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card metric-card">
+                        <div class="metric-label">目标达成率</div>
+                        <div class="metric-value">94.2%</div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 94.2%" aria-valuenow="94.2" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商品列表 -->
+            <div class="card">
+                <div class="card-header">商品列表</div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>商品名称</th>
+                                    <th>商品ID</th>
+                                    <th>上架时间</th>
+                                    <th>当日销量</th>
+                                    <th>当日GMV</th>
+                                    <th>当月销量</th>
+                                    <th>当月GMV</th>
+                                    <th>库存</th>
+                                    <th>状态</th>
+                                </tr>
+                            </thead>
+                            <tbody id="product-table-body">
+                                <!-- 商品数据将通过JavaScript动态加载 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 商品销售趋势 -->
+            <div class="card mt-4">
+                <div class="card-header">商品销售趋势</div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="productTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 日历弹窗 -->
+    <div id="calendarPopup" class="calendar-popup">
+        <div class="calendar-header">
+            <h5 class="calendar-title" id="calendarTitle">选择年份</h5>
+            <button class="calendar-close" onclick="closeCalendar()">&times;</button>
+        </div>
+        <div id="calendarContent" class="calendar-grid"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+    <script>if(!window.bootstrap){var s=document.createElement('script');s.src='https://unpkg.com/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js';document.body.appendChild(s);}</script>
+    <script src="./assets/js/app.js"></script>
+    <script>
+        // inline script retained to avoid breaking; migrated logic is in assets/js/app.js
+        const themes = {
+            gold: {
+                '--primary-color':'#c3b092','--primary-dark':'#a67c52','--primary-light':'#e6dfd3','--light-bg':'#f9f7f4','--text-primary':'#5a4a3e','--text-secondary':'#8a7a6a','--border-color':'#e2d9cf',
+                '--emphasis-positive':'#a5662b'
+            },
+            warm: {
+                '--primary-color':'#d87a6e','--primary-dark':'#c45548','--primary-light':'#f3d4cf','--light-bg':'#fff7f6','--text-primary':'#5a3a36','--text-secondary':'#845c56','--border-color':'#f0d0cb',
+                '--emphasis-positive':'#c45548'
+            },
+            indigo: {
+                '--primary-color':'#6b83d8','--primary-dark':'#4b61c4','--primary-light':'#d9def6','--light-bg':'#f6f7ff','--text-primary':'#343a5a','--text-secondary':'#5a618a','--border-color':'#d0d4f0',
+                '--emphasis-positive':'#4b61c4'
+            }
+        };
+
+        function applyTheme(name){
+            const theme = themes[name] || themes.gold;
+            const root = document.documentElement;
+            Object.entries(theme).forEach(([k,v])=> root.style.setProperty(k,v));
+            localStorage.setItem('selectedTheme', name);
+            // 主题切换后刷新图表配色
+            try { updateChartColors(); } catch(e) {}
+        }
+
+        // 全局变量
+        let currentDataMode = 'mock'; // 'mock' 或 'real'
+        let currentSheet = null;
+        let currentYear = new Date().getFullYear();
+        let currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3);
+        let currentMonth = new Date().getMonth() + 1;
+        let currentDay = new Date().getDate();
+
+        // 数据模式切换
+        function switchDataMode(mode) {
+            currentDataMode = mode;
+            const mockBtn = document.getElementById('mockDataBtn');
+            const realBtn = document.getElementById('realDataBtn');
+            mockBtn.classList.toggle('active', mode === 'mock');
+            realBtn.classList.toggle('active', mode === 'real');
+            // ARIA & 可访问性
+            mockBtn.setAttribute('aria-pressed', mode === 'mock');
+            realBtn.setAttribute('aria-pressed', mode === 'real');
+            
+            if (mode === 'mock') {
+                // 显示模拟数据
+                loadMockData();
+            } else {
+                // 显示真实数据（如果有上传的Excel）
+                if (currentSheet) {
+                    loadRealData();
+                } else {
+                    alert('请先上传Excel文件');
+                    switchDataMode('mock');
+                }
+            }
+        }
+
+        // 文件上传处理
+        function handleFileUpload(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    currentSheet = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+                    
+                    // 更新上传区域显示
+                    document.getElementById('uploadArea').innerHTML = `
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5>文件上传成功</h5>
+                        <p class="text-muted">已加载 ${currentSheet.length} 行数据</p>
+                        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">重新上传</button>
+                    `;
+                    
+                    // 切换到真实数据模式
+                    switchDataMode('real');
+                } catch (error) {
+                    alert('文件解析失败: ' + error.message);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        // 加载真实数据
+        function loadRealData() {
+            if (!currentSheet) return;
+            
+            // 更新指标卡片
+            updateMetricsFromRealData();
+            
+            // 更新表格
+            updateTableFromRealData();
+            
+            // 更新图表
+            updateChartsFromRealData();
+        }
+
+        // 从真实数据更新指标
+        function updateMetricsFromRealData() {
+            if (!currentSheet) return;
+            
+            const yearGMV = currentSheet.reduce((sum, row) => sum + (row['年GMV'] || 0), 0);
+            const quarterGMV = currentSheet.reduce((sum, row) => sum + (row['季GMV'] || 0), 0);
+            const monthGMV = currentSheet.reduce((sum, row) => sum + (row['月GMV'] || 0), 0);
+            const dayGMV = currentSheet.reduce((sum, row) => sum + (row['当日GMV'] || 0), 0);
+            
+            // 更新指标显示
+            const metricCards = document.querySelectorAll('.metric-card .metric-value');
+            if (metricCards[0]) metricCards[0].textContent = '¥' + formatNumber(dayGMV);
+            if (metricCards[1]) metricCards[1].textContent = '¥' + formatNumber(monthGMV);
+            if (metricCards[2]) metricCards[2].textContent = '¥' + formatNumber(yearGMV);
+        }
+
+        // 从真实数据更新表格
+        function updateTableFromRealData() {
+            if (!currentSheet) return;
+            
+            // 更新实控人列表表格
+            const tbody = document.querySelector('#home-page .table tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                currentSheet.slice(0, 10).forEach((row, index) => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'controller-card';
+                    tr.onclick = () => showControllerDetail(row['实控人'] || '未知');
+                    tr.innerHTML = `
+                        <td>${row['实控人'] || '-'}</td>
+                        <td><span class="tag tag-high-value">高价值客户</span></td>
+                        <td>${formatNumber(row['月目标'] || 0)}万</td>
+                        <td>${formatNumber(row['月GMV'] || 0)}万</td>
+                        <td class="${(row['月环比'] || 0) >= 0 ? 'positive' : 'negative'}">
+                            ${(row['月环比'] || 0).toFixed(1)}%
+                        </td>
+                        <td>${formatNumber(row['年GMV'] || 0)}万</td>
+                        <td>${formatNumber(row['当日GMV'] || 0)}万</td>
+                        <td class="${(row['日环比'] || 0) >= 0 ? 'positive' : 'negative'}">
+                            ${(row['日环比'] || 0).toFixed(1)}%
+                        </td>
+                        <td>${(row['达成率'] || 0).toFixed(1)}%</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // 从真实数据更新图表
+        function updateChartsFromRealData() {
+            if (!currentSheet) return;
+            
+            // 这里可以根据真实数据更新图表
+            // 由于Excel数据结构可能不完整，保持原有图表不变
+        }
+
+        // 加载模拟数据（避免整页刷新，直接重置视图）
+        function loadMockData() {
+            // 恢复指标展示（写回静态占位）
+            const metricCards = document.querySelectorAll('.metric-card .metric-value');
+            if (metricCards[0]) metricCards[0].textContent = '¥1,245,680';
+            if (metricCards[1]) metricCards[1].textContent = '¥28,567,320';
+            if (metricCards[2]) metricCards[2].textContent = '¥312,458,790';
+
+            // 表格恢复为原先模拟数据无需变动；若被真实数据覆盖，这里不强制回滚
+        }
+
+        // 格式化数字
+        function formatNumber(num) {
+            return (num || 0).toLocaleString();
+        }
+
+        // 日历相关函数
+        let calendarJustOpened = false;
+        function showYearCalendar() {
+            const popup = document.getElementById('calendarPopup');
+            const title = document.getElementById('calendarTitle');
+            const content = document.getElementById('calendarContent');
+            const trigger = document.getElementById('yearIcon');
+            
+            title.textContent = '选择年份';
+            content.className = 'calendar-grid calendar-year-grid';
+            
+            let yearItems = '';
+            for (let year = currentYear - 5; year <= currentYear + 5; year++) {
+                const isSelected = year === currentYear ? 'selected' : '';
+                yearItems += `<div class="calendar-item ${isSelected}" onclick="selectYear(${year})">${year}年</div>`;
+            }
+            content.innerHTML = yearItems;
+            
+            showCalendar(popup, trigger);
+        }
+
+        function showQuarterCalendar() {
+            const popup = document.getElementById('calendarPopup');
+            const title = document.getElementById('calendarTitle');
+            const content = document.getElementById('calendarContent');
+            const trigger = document.getElementById('quarterIcon');
+            
+            title.textContent = '选择季度';
+            content.className = 'calendar-grid calendar-quarter-grid';
+            
+            let quarterItems = '';
+            for (let q = 1; q <= 4; q++) {
+                const isSelected = q === currentQuarter ? 'selected' : '';
+                quarterItems += `<div class="calendar-item ${isSelected}" onclick="selectQuarter(${q})">Q${q}</div>`;
+            }
+            content.innerHTML = quarterItems;
+            
+            showCalendar(popup, trigger);
+        }
+
+        function showMonthCalendar() {
+            const popup = document.getElementById('calendarPopup');
+            const title = document.getElementById('calendarTitle');
+            const content = document.getElementById('calendarContent');
+            const trigger = document.getElementById('monthIcon');
+            
+            title.textContent = '选择月份';
+            content.className = 'calendar-grid calendar-month-grid';
+            
+            let monthItems = '';
+            for (let m = 1; m <= 12; m++) {
+                const isSelected = m === currentMonth ? 'selected' : '';
+                monthItems += `<div class="calendar-item ${isSelected}" onclick="selectMonth(${m})">${m}月</div>`;
+            }
+            content.innerHTML = monthItems;
+            
+            showCalendar(popup, trigger);
+        }
+
+        function showDayCalendar() {
+            const popup = document.getElementById('calendarPopup');
+            const title = document.getElementById('calendarTitle');
+            const content = document.getElementById('calendarContent');
+            const trigger = document.getElementById('dayIcon');
+            
+            title.textContent = '选择日期';
+            content.className = 'calendar-grid calendar-day-grid';
+            
+            let dayItems = '';
+            for (let d = 1; d <= 31; d++) {
+                const isSelected = d === currentDay ? 'selected' : '';
+                dayItems += `<div class="calendar-item ${isSelected}" onclick="selectDay(${d})">${d}日</div>`;
+            }
+            content.innerHTML = dayItems;
+            
+            showCalendar(popup, trigger);
+        }
+
+        function showCalendar(popup, trigger) {
+            if (trigger) {
+                const triggerRect = trigger.getBoundingClientRect();
+                
+                // 获取弹窗实际尺寸
+                popup.style.display = 'block';
+                popup.style.visibility = 'hidden';
+                popup.classList.add('show');
+                
+                const popupWidth = popup.offsetWidth;
+                
+                // 计算按钮底部中心点，弹窗显示在下方并水平居中
+                const left = triggerRect.left + (triggerRect.width / 2) - (popupWidth / 2);
+                const top = triggerRect.bottom + 8; // 下方 8px 间距
+                
+                popup.style.top = top + 'px';
+                popup.style.left = left + 'px';
+                popup.style.transform = 'none';
+            }
+            
+            // 显示弹窗
+            popup.style.visibility = 'visible';
+            // 弹窗内点击不关闭
+            popup.onclick = function(e){ e.stopPropagation(); };
+            // 打开后的短暂忽略，避免当前点击被视为外部点击
+            calendarJustOpened = true;
+            setTimeout(() => { calendarJustOpened = false; }, 50);
+            // 重绑外部关闭
+            document.removeEventListener('click', closeCalendarOnOutsideClick, true);
+            document.addEventListener('click', closeCalendarOnOutsideClick, true);
+        }
+
+        function closeCalendar() {
+            const popup = document.getElementById('calendarPopup');
+            popup.style.display = 'none';
+            popup.classList.remove('show');
+            document.removeEventListener('click', closeCalendarOnOutsideClick);
+        }
+
+        function closeCalendarOnOutsideClick(e) {
+            if (calendarJustOpened) return;
+            const popup = document.getElementById('calendarPopup');
+            if (!popup.contains(e.target)) {
+                closeCalendar();
+            }
+        }
+
+        function selectYear(year) {
+            currentYear = year;
+            closeCalendar();
+            // 保持简洁：不依赖 event.target，避免跨浏览器问题
+            updateCurrentSelectionLabel();
+        }
+
+        function selectQuarter(quarter) {
+            currentQuarter = quarter;
+            closeCalendar();
+            // 不依赖 event.target
+            updateCurrentSelectionLabel();
+        }
+
+        function selectMonth(month) {
+            currentMonth = month;
+            closeCalendar();
+            // 不依赖 event.target
+            updateCurrentSelectionLabel();
+        }
+
+        function selectDay(day) {
+            currentDay = day;
+            closeCalendar();
+            // 不依赖 event.target
+            updateCurrentSelectionLabel();
+        }
+
+        function updateCurrentSelectionLabel(){
+            const text = `${currentYear}年 Q${currentQuarter} ${currentMonth}月 ${currentDay}日`;
+            const el = document.getElementById('currentSelection');
+            if (el) el.textContent = `当前选择：${text}`;
+        }
+
+        // 完整日期输入绑定
+        document.addEventListener('change', function(e){
+            if (e.target && e.target.id === 'fullDateInput'){
+                const d = new Date(e.target.value);
+                if (!isNaN(d)){
+                    currentYear = d.getFullYear();
+                    currentMonth = d.getMonth() + 1;
+                    currentDay = d.getDate();
+                    currentQuarter = Math.ceil(currentMonth/3);
+                    updateCurrentSelectionLabel();
+                }
+            }
+        });
+
+        // 导出全量底表（可重新导入）
+        function exportAllToExcel(){
+            try{
+                const wb = XLSX.utils.book_new();
+
+                // 1) 实控人列表：从当前可见表格抓取（保证与页面一致）
+                const table = document.querySelector('#home-page table');
+                if (table){
+                    const wsDashboard = XLSX.utils.table_to_sheet(table);
+                    XLSX.utils.book_append_sheet(wb, wsDashboard, '实控人列表');
+                }
+
+                // 2) 指标卡片快照
+                const snapshot = [];
+                snapshot.push({ 指标: '年GMV', 数值: (document.getElementById('year-gmv')||{}).textContent||'' });
+                snapshot.push({ 指标: '季GMV', 数值: (document.getElementById('quarter-gmv')||{}).textContent||'' });
+                snapshot.push({ 指标: '月GMV', 数值: (document.getElementById('month-gmv')||{}).textContent||'' });
+                snapshot.push({ 指标: '日GMV', 数值: (document.getElementById('day-gmv')||{}).textContent||'' });
+                const wsKPI = XLSX.utils.json_to_sheet(snapshot);
+                XLSX.utils.book_append_sheet(wb, wsKPI, '指标快照');
+
+                // 3) Top5 排行（从列表DOM提取）
+                const top5 = [];
+                document.querySelectorAll('#top5Ranking .ranking-item').forEach((item, idx)=>{
+                    const name = item.querySelector('.ranking-name')?.textContent||'';
+                    const value = item.querySelector('.ranking-value')?.textContent||'';
+                    top5.push({ 排名: idx+1, 实控人: name, GMV: value });
+                });
+                if (top5.length){
+                    const wsTop5 = XLSX.utils.json_to_sheet(top5);
+                    XLSX.utils.book_append_sheet(wb, wsTop5, 'Top5排行');
+                }
+
+                // 4) 模拟数据源（shops、products、contractData、controllers）
+                if (typeof controllers !== 'undefined'){
+                    const controllersArr = Object.entries(controllers).map(([k,v])=>({
+                        key: k,
+                        name: v.name, tag: v.tag, tagText: v.tagText,
+                        dailyGMV: v.dailyGMV, monthlyGMV: v.monthlyGMV, yearlyGMV: v.yearlyGMV,
+                        yoy: v.yoy, mom: v.mom, targetRate: v.targetRate,
+                        registerDate: v.registerDate, lastActive: v.lastActive
+                    }));
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(controllersArr), 'controllers');
+                }
+                if (typeof shops !== 'undefined'){
+                    const shopsArr = [];
+                    Object.entries(shops).forEach(([owner, arr])=>{
+                        arr.forEach(s=> shopsArr.push({ owner, ...s }));
+                    });
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(shopsArr), 'shops');
+                }
+                if (typeof products !== 'undefined'){
+                    const productsArr = [];
+                    Object.entries(products).forEach(([shopId, arr])=>{
+                        arr.forEach(p=> productsArr.push({ shopId, ...p }));
+                    });
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(productsArr), 'products');
+                }
+                if (typeof contractData !== 'undefined'){
+                    Object.entries(contractData).forEach(([type, arr])=>{
+                        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(arr), `contract_${type}`);
+                    });
+                }
+
+                // 5) 真实数据（如已上传Excel）
+                if (Array.isArray(currentSheet) && currentSheet.length){
+                    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(currentSheet), '导入底表');
+                }
+
+                // 6) 元信息（当前选择）
+                const meta = [{ year: currentYear, quarter: currentQuarter, month: currentMonth, day: currentDay }];
+                XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(meta), 'meta');
+
+                const filename = `全量导出_${currentYear}Q${currentQuarter}_${currentMonth}月${currentDay}日.xlsx`;
+                XLSX.writeFile(wb, filename);
+            }catch(err){
+                alert('导出失败：' + err.message);
+            }
+        }
+
+        // 模拟数据
+        const controllers = {
+            '张明轩': {
+                name: '张明轩',
+                tag: 'tag-high-value',
+                tagText: '高价值客户',
+                dailyGMV: '¥568,920',
+                monthlyGMV: '¥12,458,760',
+                yearlyGMV: '¥145,678,920',
+                yoy: '+15.2%',
+                mom: '+8.7%',
+                targetRate: '92.5%',
+                registerDate: '2019-03-15',
+                lastActive: '2023-10-26'
+            },
+            '李思雨': {
+                name: '李思雨',
+                tag: 'tag-vip',
+                tagText: 'VIP客户',
+                dailyGMV: '¥452,310',
+                monthlyGMV: '¥10,245,890',
+                yearlyGMV: '¥124,567,890',
+                yoy: '+12.8%',
+                mom: '+6.3%',
+                targetRate: '88.7%',
+                registerDate: '2020-05-20',
+                lastActive: '2023-10-26'
+            },
+            '王建国': {
+                name: '王建国',
+                tag: 'tag-high-value',
+                tagText: '高价值客户',
+                dailyGMV: '¥398,760',
+                monthlyGMV: '¥9,876,540',
+                yearlyGMV: '¥112,345,670',
+                yoy: '+10.5%',
+                mom: '+5.2%',
+                targetRate: '85.3%',
+                registerDate: '2018-11-12',
+                lastActive: '2023-10-25'
+            },
+            '赵晓雯': {
+                name: '赵晓雯',
+                tag: 'tag-new',
+                tagText: '新客户',
+                dailyGMV: '¥356,890',
+                monthlyGMV: '¥8,765,430',
+                yearlyGMV: '¥98,765,430',
+                yoy: '+8.7%',
+                mom: '+4.1%',
+                targetRate: '82.1%',
+                registerDate: '2022-02-18',
+                lastActive: '2023-10-26'
+            },
+            '刘浩然': {
+                name: '刘浩然',
+                tag: 'tag-vip',
+                tagText: 'VIP客户',
+                dailyGMV: '¥321,450',
+                monthlyGMV: '¥7,654,320',
+                yearlyGMV: '¥87,654,320',
+                yoy: '+7.3%',
+                mom: '+3.5%',
+                targetRate: '79.8%',
+                registerDate: '2019-07-25',
+                lastActive: '2023-10-24'
+            }
+        };
+
+        const shops = {
+            '张明轩': [
+                { name: '张明轩旗舰店', id: 'ZMX001', channel: '天猫', openTime: '2019-06-10', dailyGMV: '¥245,680', monthlyGMV: '¥5,678,920', yearlyGMV: '¥67,890,450', yoy: '+18.2%', mom: '+9.5%', targetRate: '94.2%' },
+                { name: '张明轩京东店', id: 'ZMX002', channel: '京东', openTime: '2019-08-15', dailyGMV: '¥156,790', monthlyGMV: '¥3,456,780', yearlyGMV: '¥42,345,670', yoy: '+12.5%', mom: '+6.8%', targetRate: '88.7%' },
+                { name: '张明轩拼多多店', id: 'ZMX003', channel: '拼多多', openTime: '2020-03-20', dailyGMV: '¥98,450', monthlyGMV: '¥2,345,670', yearlyGMV: '¥28,765,430', yoy: '+22.3%', mom: '+12.7%', targetRate: '96.5%' },
+                { name: '张明轩抖音店', id: 'ZMX004', channel: '抖音', openTime: '2021-05-12', dailyGMV: '¥68,000', monthlyGMV: '¥1,567,890', yearlyGMV: '¥18,765,430', yoy: '+45.2%', mom: '+28.9%', targetRate: '102.3%' }
+            ],
+            '李思雨': [
+                { name: '李思雨旗舰店', id: 'LSY001', channel: '天猫', openTime: '2020-07-10', dailyGMV: '¥198,760', monthlyGMV: '¥4,567,890', yearlyGMV: '¥54,678,900', yoy: '+15.7%', mom: '+8.3%', targetRate: '91.2%' },
+                { name: '李思雨京东店', id: 'LSY002', channel: '京东', openTime: '2020-09-18', dailyGMV: '¥134,560', monthlyGMV: '¥3,098,760', yearlyGMV: '¥37,654,320', yoy: '+10.8%', mom: '+5.4%', targetRate: '86.5%' },
+                { name: '李思雨拼多多店', id: 'LSY003', channel: '拼多多', openTime: '2021-02-14', dailyGMV: '¥76,540', monthlyGMV: '¥1,876,540', yearlyGMV: '¥22,345,670', yoy: '+18.9%', mom: '+10.2%', targetRate: '89.7%' },
+                { name: '李思雨快手店', id: 'LSY004', channel: '快手', openTime: '2022-01-08', dailyGMV: '¥42,310', monthlyGMV: '¥987,650', yearlyGMV: '¥11,876,540', yoy: '+32.5%', mom: '+18.7%', targetRate: '95.8%' }
+            ]
+        };
+
+        const products = {
+            'ZMX001': [
+                { name: '男士休闲夹克', id: 'MXJ001', listTime: '2023-03-15', dailySales: 156, dailyGMV: '¥45,680', monthlySales: 3456, monthlyGMV: '¥1,023,450', stock: 2345, status: '在售' },
+                { name: '男士商务衬衫', id: 'MSC002', listTime: '2023-02-10', dailySales: 203, dailyGMV: '¥38,760', monthlySales: 4567, monthlyGMV: '¥876,540', stock: 1876, status: '在售' },
+                { name: '男士休闲裤', id: 'MXK003', listTime: '2023-04-22', dailySales: 178, dailyGMV: '¥32,450', monthlySales: 3987, monthlyGMV: '¥723,450', stock: 2156, status: '在售' },
+                { name: '男士运动鞋', id: 'MXS004', listTime: '2023-01-05', dailySales: 134, dailyGMV: '¥56,780', monthlySales: 2876, monthlyGMV: '¥1,234,560', stock: 1567, status: '在售' },
+                { name: '男士羽绒服', id: 'MYR005', listTime: '2022-11-20', dailySales: 89, dailyGMV: '¥71,230', monthlySales: 1876, monthlyGMV: '¥1,567,890', stock: 987, status: '在售' }
+            ],
+            'ZMX002': [
+                { name: '男士POLO衫', id: 'MPS001', listTime: '2023-05-10', dailySales: 145, dailyGMV: '¥23,450', monthlySales: 3123, monthlyGMV: '¥498,760', stock: 1876, status: '在售' },
+                { name: '男士牛仔裤', id: 'MNZ002', listTime: '2023-03-28', dailySales: 167, dailyGMV: '¥34,560', monthlySales: 3567, monthlyGMV: '¥723,450', stock: 2345, status: '在售' },
+                { name: '男士皮鞋', id: 'MPX003', listTime: '2023-02-15', dailySales: 98, dailyGMV: '¥45,670', monthlySales: 2134, monthlyGMV: '¥987,650', stock: 1234, status: '在售' },
+                { name: '男士卫衣', id: 'MWY004', listTime: '2023-04-05', dailySales: 156, dailyGMV: '¥28,760', monthlySales: 3345, monthlyGMV: '¥612,340', stock: 1876, status: '在售' }
+            ]
+        };
+
+        const contractData = {
+            'dealer': [
+                { name: '张明轩旗舰店', id: 'ZMX001', channel: '天猫', openTime: '2019-06-10', dailyGMV: '¥245,680', yoy: '+18.2%', mom: '+9.5%', targetRate: '94.2%' },
+                { name: '张明轩京东店', id: 'ZMX002', channel: '京东', openTime: '2019-08-15', dailyGMV: '¥156,790', yoy: '+12.5%', mom: '+6.8%', targetRate: '88.7%' },
+                { name: '张明轩拼多多店', id: 'ZMX003', channel: '拼多多', openTime: '2020-03-20', dailyGMV: '¥98,450', yoy: '+22.3%', mom: '+12.7%', targetRate: '96.5%' }
+            ],
+            'supplier': [
+                { name: '杭州服装供应商', id: 'GYS001', channel: '直供', openTime: '2018-12-05', dailyGMV: '¥0', yoy: '+0%', mom: '+0%', targetRate: '100%' },
+                { name: '浙江面料合作商', id: 'GYS002', channel: '合作', openTime: '2019-03-18', dailyGMV: '¥0', yoy: '+0%', mom: '+0%', targetRate: '100%' }
+            ],
+            'other': [
+                { name: '张明轩抖音店', id: 'ZMX004', channel: '抖音', openTime: '2021-05-12', dailyGMV: '¥68,000', yoy: '+45.2%', mom: '+28.9%', targetRate: '102.3%' },
+                { name: '张明轩快手店', id: 'ZMX005', channel: '快手', openTime: '2022-02-28', dailyGMV: '¥32,450', yoy: '+38.7%', mom: '+22.5%', targetRate: '98.7%' },
+                { name: '张明轩小红书店', id: 'ZMX006', channel: '小红书', openTime: '2022-08-15', dailyGMV: '¥18,760', yoy: '+52.3%', mom: '+34.8%', targetRate: '105.6%' },
+                { name: '张明轩微博店', id: 'ZMX007', channel: '微博', openTime: '2023-01-10', dailyGMV: '¥12,340', yoy: '+67.8%', mom: '+45.2%', targetRate: '112.3%' },
+                { name: '张明轩B站店', id: 'ZMX008', channel: 'B站', openTime: '2023-04-20', dailyGMV: '¥8,760', yoy: '+78.9%', mom: '+56.7%', targetRate: '118.9%' }
+            ]
+        };
+
+        // 页面切换函数
+        function showPage(page) {
+            document.getElementById('home-page').style.display = page === 'home' ? 'block' : 'none';
+            document.getElementById('controller-page').style.display = page === 'controller' ? 'block' : 'none';
+            document.getElementById('shop-page').style.display = page === 'shop' ? 'block' : 'none';
+        }
+
+        // 显示实控人详情
+        let currentController = '张明轩';
+        
+        function showControllerDetail(controllerName) {
+            currentController = controllerName;
+            const controller = controllers[controllerName];
+            
+            // 更新页面标题和标签
+            document.getElementById('controller-name').innerHTML = `${controller.name} <span class="tag ${controller.tag}">${controller.tagText}</span>`;
+            document.getElementById('controller-breadcrumb').textContent = `${controller.name} - 实控人详情`;
+            const backCtrlIcon = document.querySelector('#controller-page .breadcrumb .back-link');
+            if (backCtrlIcon) backCtrlIcon.setAttribute('onclick', `showPage('home')`);
+            document.getElementById('basic-name').textContent = controller.name;
+            
+            // 更新关键指标
+            document.querySelectorAll('#controller-page .metric-card .metric-value')[0].textContent = controller.dailyGMV;
+            document.querySelectorAll('#controller-page .metric-card .metric-value')[1].textContent = controller.monthlyGMV;
+            document.querySelectorAll('#controller-page .metric-card .metric-value')[2].textContent = controller.yearlyGMV;
+            document.querySelectorAll('#controller-page .metric-card .metric-value')[3].textContent = controller.targetRate;
+            document.querySelector('#controller-page .progress-bar').style.width = controller.targetRate;
+            
+            // 加载GMV数据
+            loadGMVData(controllerName);
+            
+            // 默认显示经销商合同
+            showContract('dealer');
+            
+            // 切换到实控人详情页面
+            showPage('controller');
+        }
+
+        // 加载GMV数据
+        function loadGMVData(controllerName) {
+            const tableBody = document.getElementById('gmv-table-body');
+            tableBody.innerHTML = '';
+            
+            if (shops[controllerName]) {
+                shops[controllerName].forEach(shop => {
+                    const row = document.createElement('tr');
+                    row.className = 'shop-card';
+                    row.onclick = () => showShopDetail(shop.id, controllerName);
+                    
+                    row.innerHTML = `
+                        <td>${shop.name}</td>
+                        <td>${shop.id}</td>
+                        <td>${shop.channel}</td>
+                        <td>${shop.openTime}</td>
+                        <td>${shop.dailyGMV}</td>
+                        <td>${shop.monthlyGMV}</td>
+                        <td>${shop.yearlyGMV}</td>
+                        <td class="positive">${shop.yoy}</td>
+                        <td class="positive">${shop.mom}</td>
+                        <td>
+                            <div>${shop.targetRate}</div>
+                            <div class="progress">
+                                <div class="progress-bar bg-success" role="progressbar" style="width: ${shop.targetRate}" aria-valuenow="${parseFloat(shop.targetRate)}" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>
+                        </td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        // 显示合同详情
+        function showContract(type) {
+            const contractTitle = document.getElementById('contract-title');
+            const tableBody = document.getElementById('contract-table-body');
+            tableBody.innerHTML = '';
+            
+            let title = '';
+            let data = [];
+            
+            switch(type) {
+                case 'dealer':
+                    title = '经销商合同详情';
+                    data = contractData.dealer;
+                    break;
+                case 'supplier':
+                    title = '供应商合同详情';
+                    data = contractData.supplier;
+                    break;
+                case 'other':
+                    title = '其他合同详情';
+                    data = contractData.other;
+                    break;
+            }
+            
+            contractTitle.textContent = title;
+            
+            data.forEach(shop => {
+                const row = document.createElement('tr');
+                row.className = 'shop-card';
+                row.onclick = () => showShopDetail(shop.id, currentController);
+                
+                row.innerHTML = `
+                    <td>${shop.name}</td>
+                    <td>${shop.id}</td>
+                    <td>${shop.channel}</td>
+                    <td>${shop.openTime}</td>
+                    <td>${shop.dailyGMV}</td>
+                    <td class="positive">${shop.yoy}</td>
+                    <td class="positive">${shop.mom}</td>
+                    <td>
+                        <div>${shop.targetRate}</div>
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: ${shop.targetRate}" aria-valuenow="${parseFloat(shop.targetRate)}" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        // 显示店铺详情
+        function showShopDetail(shopId, controllerName) {
+            // 查找店铺信息
+            let shopInfo = null;
+            if (shops[controllerName]) {
+                shopInfo = shops[controllerName].find(shop => shop.id === shopId);
+            }
+            
+            if (shopInfo) {
+                // 更新页面标题
+                document.getElementById('shop-name').textContent = shopInfo.name;
+                document.getElementById('shop-id').textContent = shopInfo.id;
+                document.getElementById('shop-open-time').textContent = shopInfo.openTime;
+                document.getElementById('shop-channel').textContent = shopInfo.channel;
+                document.getElementById('shop-breadcrumb').textContent = `${shopInfo.name} - 店铺详情`;
+                
+                // 更新返回链接（文字与左侧图标一致）
+                document.getElementById('back-to-controller').setAttribute('onclick', `showControllerDetail('${controllerName}')`);
+                const backIcon = document.getElementById('back-to-controller-icon');
+                if (backIcon) backIcon.setAttribute('onclick', `showControllerDetail('${controllerName}')`);
+                
+                // 更新关键指标
+                document.querySelectorAll('#shop-page .metric-card .metric-value')[0].textContent = shopInfo.dailyGMV;
+                document.querySelectorAll('#shop-page .metric-card .metric-value')[1].textContent = shopInfo.monthlyGMV;
+                document.querySelectorAll('#shop-page .metric-card .metric-value')[2].textContent = shopInfo.yearlyGMV;
+                document.querySelectorAll('#shop-page .metric-card .metric-value')[3].textContent = shopInfo.targetRate;
+                document.querySelector('#shop-page .progress-bar').style.width = shopInfo.targetRate;
+                
+                // 加载商品数据
+                loadProductData(shopId);
+                
+                // 切换到店铺详情页面
+                showPage('shop');
+            }
+        }
+
+        // 加载商品数据
+        function loadProductData(shopId) {
+            const tableBody = document.getElementById('product-table-body');
+            tableBody.innerHTML = '';
+            
+            if (products[shopId]) {
+                products[shopId].forEach(product => {
+                    const row = document.createElement('tr');
+                    row.className = 'product-card';
+                    
+                    row.innerHTML = `
+                        <td>${product.name}</td>
+                        <td>${product.id}</td>
+                        <td>${product.listTime}</td>
+                        <td>${product.dailySales}</td>
+                        <td>${product.dailyGMV}</td>
+                        <td>${product.monthlySales}</td>
+                        <td>${product.monthlyGMV}</td>
+                        <td>${product.stock}</td>
+                        <td><span class="tag tag-high-value">${product.status}</span></td>
+                    `;
+                    
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+
+        // 切换信息标签页
+        function showInfo(section) {
+            // 隐藏所有信息区域
+            document.querySelectorAll('.info-section').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // 移除所有标签页的active类
+            document.querySelectorAll('.tab-button').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            // 显示选中的信息区域
+            document.getElementById(section + '-info').classList.add('active');
+            
+            // 为当前标签页添加active类
+            event.target.classList.add('active');
+        }
+
+        // 初始化图表
+        let channelChartInstance = null;
+        let industryChartInstance = null;
+
+        // 颜色工具：Hex <-> HSL
+        function hexToRgb(hex){
+            const h = hex.replace('#','');
+            const bigint = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h, 16);
+            return { r: (bigint>>16)&255, g: (bigint>>8)&255, b: bigint&255 };
+        }
+        function rgbToHsl(r,g,b){
+            r/=255; g/=255; b/=255;
+            const max=Math.max(r,g,b), min=Math.min(r,g,b);
+            let h,s; const l=(max+min)/2;
+            if(max===min){ h=s=0; } else {
+                const d=max-min;
+                s=l>0.5? d/(2-max-min): d/(max+min);
+                switch(max){
+                    case r: h=(g-b)/d+(g<b?6:0); break;
+                    case g: h=(b-r)/d+2; break;
+                    case b: h=(r-g)/d+4; break;
+                }
+                h/=6;
+            }
+            return { h: h*360, s: s*100, l: l*100 };
+        }
+        function hslToHex(h,s,l){
+            h/=360; s/=100; l/=100;
+            const hue2rgb=(p,q,t)=>{ if(t<0)t+=1; if(t>1)t-=1; if(t<1/6)return p+(q-p)*6*t; if(t<1/2)return q; if(t<2/3)return p+(q-p)*(2/3-t)*6; return p; };
+            const q=l<0.5? l*(1+s): l+s-l*s; const p=2*l-q;
+            const r=hue2rgb(p,q,h+1/3), g=hue2rgb(p,q,h), b=hue2rgb(p,q,h-1/3);
+            const toHex=x=>{ const v=Math.round(x*255).toString(16).padStart(2,'0'); return v; };
+            return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+        }
+        function clamp(v,min,max){ return Math.max(min, Math.min(max, v)); }
+
+        function getThemePalette(){
+            const pc = getComputedStyle(document.documentElement).getPropertyValue('--primary-color').trim();
+            const pd = getComputedStyle(document.documentElement).getPropertyValue('--primary-dark').trim();
+            const pl = getComputedStyle(document.documentElement).getPropertyValue('--primary-light').trim();
+            const {h,s,l} = rgbToHsl(...Object.values(hexToRgb(pc)));
+            // 生成 6 色：主色深/主/浅 + 左右邻近色（±18°）深/浅，保证和谐且区分
+            const h1 = (h+360-18)%360, h2 = (h+18)%360;
+            const palette = [
+                hslToHex(h, clamp(s,30,85), clamp(l-10,25,60)),      // 主色偏深
+                hslToHex(h, clamp(s,30,85), clamp(l,30,70)),         // 主色
+                hslToHex(h, clamp(s-10,20,75), clamp(l+12,35,80)),   // 主色偏浅
+                hslToHex(h1, clamp(s,30,85), clamp(l-2,28,65)),      // 左邻近
+                hslToHex(h2, clamp(s,30,85), clamp(l+4,32,72)),      // 右邻近
+                hslToHex(h2, clamp(s-5,25,70), clamp(l-14,25,60))    // 右邻近偏深
+            ];
+            const contrastA = pd;            // 本品牌柱
+            const contrastB = '#8e9aa3';     // 行业对比柱（中性灰蓝）
+            return { palette, contrastA, contrastB };
+        }
+
+        function initCharts() {
+            const { palette, contrastA, contrastB } = getThemePalette();
+            // 渠道分布图表
+            const channelCtx = document.getElementById('channelChart').getContext('2d');
+            channelChartInstance = new Chart(channelCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['天猫', '京东', '拼多多', '抖音', '快手', '其他'],
+                    datasets: [{
+                        data: [35, 25, 15, 12, 8, 5],
+                        backgroundColor: palette,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                        }
+                    }
+                }
+            });
+
+            // 行业大盘图表
+            const industryCtx = document.getElementById('industryChart').getContext('2d');
+            industryChartInstance = new Chart(industryCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月'],
+                    datasets: [{
+                        label: '实控人GMV',
+                        data: [10500000, 11200000, 10800000, 12500000, 13200000, 12800000, 14200000, 13800000, 14500000, 15600000],
+                        backgroundColor: contrastA,
+                        borderColor: contrastA,
+                        borderWidth: 1
+                    }, {
+                        label: '行业平均GMV',
+                        data: [9800000, 10100000, 9950000, 10800000, 11200000, 11000000, 11800000, 11500000, 12200000, 12800000],
+                        backgroundColor: contrastB,
+                        borderColor: contrastB,
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + (value / 10000) + '万';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // 商品销售趋势图表
+            const productTrendCtx = document.getElementById('productTrendChart').getContext('2d');
+            new Chart(productTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月'],
+                    datasets: [{
+                        label: '男士休闲夹克',
+                        data: [45000, 52000, 48000, 61000, 65000, 58000, 72000, 68000, 75000, 82000],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3
+                    }, {
+                        label: '男士商务衬衫',
+                        data: [38000, 42000, 39000, 48000, 52000, 45000, 56000, 53000, 59000, 64000],
+                        borderColor: '#2ecc71',
+                        backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3
+                    }, {
+                        label: '男士休闲裤',
+                        data: [32000, 35000, 33000, 41000, 44000, 38000, 47000, 45000, 49000, 53000],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        borderWidth: 2,
+                        tension: 0.3
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '¥' + (value / 1000) + '千';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function updateChartColors(){
+            const { palette, contrastA, contrastB } = getThemePalette();
+            if (channelChartInstance){
+                channelChartInstance.data.datasets[0].backgroundColor = palette;
+                channelChartInstance.update();
+            }
+            if (industryChartInstance){
+                industryChartInstance.data.datasets[0].backgroundColor = contrastA;
+                industryChartInstance.data.datasets[0].borderColor = contrastA;
+                industryChartInstance.data.datasets[1].backgroundColor = contrastB;
+                industryChartInstance.data.datasets[1].borderColor = contrastB;
+                industryChartInstance.update();
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            // 应用保存的主题
+            applyTheme(localStorage.getItem('selectedTheme') || 'gold');
+            // 推迟图表初始化，等主线程空闲
+            (window.requestIdleCallback || window.requestAnimationFrame)(function(){
+                try { initCharts(); } catch(e) { console.warn(e); }
+            });
+            updateCurrentSelectionLabel();
+            
+            // 文件上传事件
+            document.getElementById('fileInput').addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    handleFileUpload(file);
+                }
+            });
+
+            // 拖拽上传
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', function(e) {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    handleFileUpload(file);
+                }
+            });
+            
+            // 默认显示经销商合同
+            showContract('dealer');
+            
+            // 设置返回按钮事件
+            document.getElementById('back-to-controller').addEventListener('click', function() {
+                showControllerDetail(currentController);
+            });
+            
+            // 设置渠道筛选事件
+            document.getElementById('channel-filter').addEventListener('change', function() {
+                // 在实际应用中，这里会根据筛选条件重新加载数据
+                console.log('渠道筛选:', this.value);
+            });
+        });
+    </script>
+</body>
+</html>
